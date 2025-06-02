@@ -1,124 +1,129 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('#litecheckout_payments_form');
-    let paymentMethodsContainer = document.querySelector('.litecheckout__payment-methods');
-    const requiredFields = form.querySelectorAll('[data-ca-lite-checkout-field]');
-
-    console.log('DOMContentLoaded is triggered .... ');
-    let isBreezeSelected = false;
-
-    // Client-side validation rules
-
-    // Client-side validation rules
-    const validators = {
-        email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-        b_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
-        s_zipcode: value => /^[1-9][0-9]{5}$/.test(value),
-        b_zipcode: value => /^[1-9][0-9]{5}$/.test(value),
-        s_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
-        phone: value => /^\+?[1-9]\d{1,14}$/.test(value)
-
-    };
-
-    if (!paymentMethodsContainer) {
-        console.error('paymentMethods container not found!');
-        return;  // Exit if container not found
+(function () {
+    // Ensure the script runs only once DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBreezeCheckoutScript);
+    } else {
+        initBreezeCheckoutScript(); // DOM already loaded
     }
 
-    // Form validation logic
-    function isFormValid() {
-        let isValid = true;
+    function initBreezeCheckoutScript() {
+        console.log('[Breeze] DOMContentLoaded or DOM already ready.');
 
-        form.querySelectorAll('[data-ca-lite-checkout-field]').forEach(field => {
-            const value = field.value.trim();
-            const fieldName = field.dataset.caLiteCheckoutField.split('.').pop();
-            const label = field.labels?.[0]?.innerText || field.name || 'Field';
-            const isRequired = field.labels?.[0]?.classList.contains('cm-required');
-            console.log(`Validating field: ${label}, Value: ${value}, filed: ${fieldName} , Required: ${isRequired}`);
+        const form = document.querySelector('#litecheckout_payments_form');
+        const paymentMethodsContainer = document.querySelector('.litecheckout__payment-methods');
 
+        if (!form) {
+            console.error('[Breeze] Form not found: #litecheckout_payments_form');
+            return;
+        }
+        if (!paymentMethodsContainer) {
+            console.error('[Breeze] Payment methods container not found: .litecheckout__payment-methods');
+            return;
+        }
 
-            // Required field check
-            if (isRequired && !value) {
-                console.warn(`Validation failed - Required field "${label}" is empty.`);
-                isValid = false;
-                return; // Skip further validation if field is empty
+        let isBreezeSelected = false;
+        const breezePaymentId = 'YOUR_BREEZE_PAYMENT_ID_HERE'; // Replace this with actual ID
+
+        const validators = {
+            email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+            b_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
+            s_zipcode: value => /^[1-9][0-9]{5}$/.test(value),
+            b_zipcode: value => /^[1-9][0-9]{5}$/.test(value),
+            s_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
+            phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
+        };
+
+        function isFormValid() {
+            console.log('[Breeze] Validating form...');
+            let isValid = true;
+
+            form.querySelectorAll('[data-ca-lite-checkout-field]').forEach(field => {
+                const value = field.value.trim();
+                const fieldName = field.dataset.caLiteCheckoutField?.split('.').pop() || '';
+                const label = field.labels?.[0]?.innerText || field.name || 'Field';
+                const isRequired = field.labels?.[0]?.classList.contains('cm-required');
+
+                console.log(`[Breeze] Checking: ${label} (required: ${isRequired}, value: "${value}")`);
+
+                if (isRequired && !value) {
+                    console.warn(`[Breeze] Validation failed - "${label}" is required.`);
+                    isValid = false;
+                    return;
+                }
+
+                if (value && validators[fieldName] && !validators[fieldName](value)) {
+                    console.warn(`[Breeze] Validation failed - "${label}" does not pass ${fieldName} validation.`);
+                    isValid = false;
+                    return;
+                }
+            });
+
+            return isValid;
+        }
+
+        function handleBreezePayment(event) {
+            console.log('[Breeze] Breeze payment handler triggered');
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!isFormValid()) {
+                console.warn('[Breeze] Form invalid - stopping checkout');
+                if (typeof $?.ceNotification === 'function') {
+                    $.ceNotification('show', {
+                        type: 'E',
+                        title: 'Error',
+                        message: 'Please fill all required fields correctly before placing order.'
+                    });
+                } else {
+                    alert('Please fill all required fields correctly before placing order.');
+                }
+                return false;
             }
 
-            // Custom validator check
-            if (value && validators[fieldName] && !validators[fieldName](value)) {
-                console.warn(`Validation failed - Field "${label}" failed custom validation: ${fieldName}`);
-                isValid = false;
+            console.log('[Breeze] Form valid - proceeding to Breeze checkout');
+            if (window.breeze?.startCheckout) {
+                window.breeze.startCheckout();
+            } else {
+                console.error('[Breeze] breeze.startCheckout is not defined');
+            }
+        }
+
+        function handlePaymentMethodChange() {
+            const selected = document.querySelector('input[name="selected_payment_method"]:checked');
+            if (!selected) {
+                console.warn('[Breeze] No payment method selected yet.');
                 return;
+            }
+
+            isBreezeSelected = selected.value === breezePaymentId;
+            console.log(`[Breeze] Selected payment method: ${selected.value}, Breeze: ${isBreezeSelected}`);
+
+            if (isBreezeSelected) {
+                paymentMethodsContainer.onsubmit = handleBreezePayment;
+            } else {
+                paymentMethodsContainer.onsubmit = null;
+            }
+        }
+
+        // Initial trigger
+        handlePaymentMethodChange();
+
+        // Listen for changes
+        paymentMethodsContainer.addEventListener('change', function (event) {
+            if (event.target.matches('input[name="selected_payment_method"]')) {
+                console.log('[Breeze] Payment method changed');
+                handlePaymentMethodChange();
             }
         });
 
-        return isValid;
-    }
-
-    // Handle Breeze payment submission
-    function handleBreezePayment(event) {
-        console.log('handleBreezePayment triggered');
-        event.preventDefault();
-        event.stopPropagation();
-        if (!isFormValid()) {
-            console.log('Form invalid, preventing Breeze checkout.');
-
-            // SHOW an error notification
-            $.ceNotification('show', {
-                type: 'E', // Error type
-                title: 'Error',
-                message: 'Please fill all required fields correctly before placing order.'
-            });
-
-            return false;
-        }
-
-        console.log('Form valid, proceeding to Breeze checkout.');
-
-        window.breeze.startCheckout();
-    }
-
-    // Update payment handler when payment method changes
-    function updatePaymentHandler(target) {
-        const submitButton = document.querySelector('#litecheckout_place_order');
-        isBreezeSelected = target.value === breezePaymentId;
-
-        if (isBreezeSelected) {
-            console.log('Breeze payment method selected.');
-            // Set Breeze payment handler to validate and proceed to Breeze payment
-            paymentMethodsContainer.onsubmit = handleBreezePayment;
-        } else {
-            console.log('Resetting to default behavior.');
-            // Reset to default form submission behavior
-            paymentMethodsContainer.onsubmit = null;
-        }
-    }
-
-    // Initial setup to check pre-selected payment method
-    const initialPayment = document.querySelector('input[name="selected_payment_method"]:checked');
-    if (initialPayment) {
-        updatePaymentHandler(initialPayment);
-    }
-    // Observe the specific element for changes in its text content
-    // const paymentMethodElement = document.querySelector('#sw_payment_methods_94 span');
-    // Add event listener for payment method changes
-    paymentMethodsContainer.addEventListener('change', function (event) {
-        console.log('Payment method change detected...');
-        if (event.target.matches('input[name="selected_payment_method"]')) {
+        // Watch dynamic changes
+        const observer = new MutationObserver(() => {
+            console.log('[Breeze] Mutation observed in paymentMethodsContainer');
             handlePaymentMethodChange();
-        }
-    });
+        });
 
-    // Handle initial payment method selection
-    handlePaymentMethodChange();
+        observer.observe(paymentMethodsContainer, { childList: true, subtree: true });
 
-    // Initialize observer
-    const observer = new MutationObserver(function (mutations) {
-        handlePaymentMethodChange();
-    });
-
-    // Start observing
-    observer.observe(paymentMethodsContainer, {
-        childList: true,
-        subtree: true
-    });
-});
+        console.log('[Breeze] Initialization complete');
+    }
+})();
