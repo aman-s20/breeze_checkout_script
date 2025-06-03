@@ -1,4 +1,4 @@
-console.log('[Breeze] 🚀 Breeze module script loaded successfuly');
+console.log('[Breeze] 🚀 Breeze module script loaded successfully');
 
 document.addEventListener('DOMContentLoaded', function () {
     let paymentMethodsContainer = document.querySelector('.litecheckout__payment-methods');
