@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Update payment handler when payment method changes
-    function updatePaymentHandler(target) {
+    function handlePaymentMethodChange(target) {
         const submitButton = document.querySelector('#litecheckout_place_order');
         isBreezeSelected = target.value === breezePaymentId;
 
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial setup to check pre-selected payment method
     const initialPayment = document.querySelector('input[name="selected_payment_method"]:checked');
     if (initialPayment) {
-        updatePaymentHandler(initialPayment);
+        handlePaymentMethodChange(initialPayment);
     }
     // Observe the specific element for changes in its text content
     // const paymentMethodElement = document.querySelector('#sw_payment_methods_94 span');
