@@ -112,9 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Handle initial payment method selection
-    handlePaymentMethodChange();
-
     // Initialize observer
     const observer = new MutationObserver(function (mutations) {
         handlePaymentMethodChange();
