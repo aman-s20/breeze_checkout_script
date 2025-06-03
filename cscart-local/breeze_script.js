@@ -1,6 +1,6 @@
 // breeze_script.js (served via proper server, not raw.githubusercontent.com)
 
-console.log('[Breeze] 🚀 Breeze module script loaded');
+console.log('[Breeze] 🚀 Breeze module script loaded successfuly');
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('#litecheckout_payments_form');

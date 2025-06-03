@@ -1,4 +1,4 @@
-<script>
+
 document.addEventListener('DOMContentLoaded', function () {
     let paymentMethodsContainer = document.querySelector('.litecheckout__payment-methods');
     const form = document.querySelector('#litecheckout_payments_form');
@@ -125,4 +125,3 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle the payment method change on page load (first-time load)
     handlePaymentMethodChange();
 });
-</script>
