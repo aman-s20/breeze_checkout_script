@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
             subtree: true          // Include all descendant elements
         };
 
-        observer.observe(container, config);
+        observer.observe(paymentMethodContainer, config);
     }
 
     // Handle the payment method change on page load (first-time load)
