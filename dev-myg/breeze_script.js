@@ -94,30 +94,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (paymentMethodContainer) {
         console.log('Found payment method container, setting up observer');
         
-        const observer = new MutationObserver(function(mutationsList, observer) {
-            console.log('MutationObserver fired! Number of mutations:', mutationsList.length); // LOG 1: Did it fire?
-
-            mutationsList.forEach((mutation) => {
-                console.log('Mutation type:', mutation.type); // LOG 2: What kind of change?
-                if (mutation.type === 'childList') {
-                    console.log('ChildList mutation: Added nodes:', mutation.addedNodes, 'Removed nodes:', mutation.removedNodes);
-                } else if (mutation.type === 'characterData') {
-                    console.log('CharacterData mutation: Target node value:', mutation.target.nodeValue);
-                    // console.log('Parent element of text node:', mutation.target.parentElement.innerHTML);
-                } else if (mutation.type === 'attributes') {
-                    console.log('Attribute mutation: Attribute name:', mutation.attributeName, 'Old value:', mutation.oldValue);
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+            // Trigger callback for meaningful DOM changes
+                if (
+                    mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)
+                ) {
+                    handlePaymentMethodChange();
+                    break;
                 }
-            });
-            
-            handlePaymentMethodChange(); // Then call the handler
+                if (mutation.type === 'characterData') {
+                    handlePaymentMethodChange();
+                    break;
+                }
+                if (mutation.type === 'attributes') {
+                    handlePaymentMethodChange();
+                    break;
+                }
+            }
         });
         
-        // Watch for all changes to the container and its children
-        observer.observe(paymentMethodContainer, {
-            attributes: true,
-            childList: true,
-            subtree: true
-        });
+        // Observer config: monitor all major types of DOM changes
+        const config = {
+            childList: true,       // Watch for added/removed elements
+            attributes: true,      // Watch for attribute changes (like class, style)
+            characterData: true,   // Watch for text changes
+            subtree: true          // Include all descendant elements
+        };
+
+        observer.observe(container, config);
     }
 
     // Handle the payment method change on page load (first-time load)
