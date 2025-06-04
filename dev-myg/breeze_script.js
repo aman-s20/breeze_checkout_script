@@ -108,10 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log('Attribute mutation: Attribute name:', mutation.attributeName, 'Old value:', mutation.oldValue);
                 }
             });
-
-            const currentPaymentText = paymentMethodDisplayElement.querySelector('span')?.innerText.trim();
-            console.log('Current payment text at time of mutation:', currentPaymentText); // LOG 3: What's the text now?
-
+            
             handlePaymentMethodChange(); // Then call the handler
         });
         
