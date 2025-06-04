@@ -90,40 +90,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Observe the specific element for changes in its text content
-    const paymentMethodContainer = document.querySelector('#sw_payment_methods_94');
-    if (paymentMethodContainer) {
-        console.log('Found payment method container, setting up observer');
-        
-        const observer = new MutationObserver((mutationsList) => {
-            for (const mutation of mutationsList) {
-            // Trigger callback for meaningful DOM changes
-                if (
-                    mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)
-                ) {
-                    handlePaymentMethodChange();
-                    break;
-                }
-                if (mutation.type === 'characterData') {
-                    handlePaymentMethodChange();
-                    break;
-                }
-                if (mutation.type === 'attributes') {
-                    handlePaymentMethodChange();
-                    break;
-                }
-            }
-        });
-        
-        // Observer config: monitor all major types of DOM changes
-        const config = {
-            childList: true,       // Watch for added/removed elements
-            attributes: true,      // Watch for attribute changes (like class, style)
-            characterData: true,   // Watch for text changes
-            subtree: true          // Include all descendant elements
-        };
+    const observerConfig = {
+        childList: true,
+        attributes: true,
+        characterData: true,
+        subtree: true
+    };
 
-        observer.observe(paymentMethodContainer, config);
+    // Observe parent of #sw_payment_methods_94 (more resilient)
+    const containerParent = document.querySelector('.litecheckout__payment-methods');
+    if (!containerParent) {
+        console.error('Parent container not found!');
+        return;
     }
+
+    console.log('Setting up observer on payment methods parent container...');
+
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            // If #sw_payment_methods_94 was added, removed, or updated
+            const hasPaymentMethodChanged = [...mutation.addedNodes, ...mutation.removedNodes].some(node =>
+                node.nodeType === 1 && node.id === 'sw_payment_methods_94'
+            );
+
+            if (
+                hasPaymentMethodChanged ||
+                mutation.type === 'characterData' ||
+                mutation.type === 'attributes'
+            ) {
+                console.log('[Observer] Triggering handlePaymentMethodChange');
+                handlePaymentMethodChange();
+                break;
+            }
+        }
+    });
+
+    observer.observe(containerParent, observerConfig);
+
 
     // Handle the payment method change on page load (first-time load)
     handlePaymentMethodChange();
