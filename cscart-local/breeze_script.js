@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let isBreezeSelected = false;
 
     // Client-side validation rules
-
-    // Client-side validation rules
     const validators = {
         email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
         b_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
@@ -20,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function () {
         b_zipcode: value => /^[1-9][0-9]{5}$/.test(value),
         s_phone: value => /^\+?[1-9]\d{1,14}$/.test(value),
         phone: value => /^\+?[1-9]\d{1,14}$/.test(value)
-
     };
 
     if (!paymentMethodsContainer) {
@@ -38,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const label = field.labels?.[0]?.innerText || field.name || 'Field';
             const isRequired = field.labels?.[0]?.classList.contains('cm-required');
             console.log(`Validating field: ${label}, Value: ${value}, filed: ${fieldName} , Required: ${isRequired}`);
-
 
             // Required field check
             if (isRequired && !value) {
@@ -77,12 +73,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         console.log('Form valid, proceeding to Breeze checkout.');
-
         window.breeze.startCheckout();
     }
 
     // Update payment handler when payment method changes
     function handlePaymentMethodChange(target) {
+        if (!target) {
+            console.warn('No payment method target provided');
+            return;
+        }
+
         const submitButton = document.querySelector('#litecheckout_place_order');
         isBreezeSelected = target.value === breezePaymentId;
 
@@ -102,19 +102,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (initialPayment) {
         handlePaymentMethodChange(initialPayment);
     }
-    // Observe the specific element for changes in its text content
-    // const paymentMethodElement = document.querySelector('#sw_payment_methods_94 span');
+
     // Add event listener for payment method changes
     paymentMethodsContainer.addEventListener('change', function (event) {
         console.log('Payment method change detected...');
         if (event.target.matches('input[name="selected_payment_method"]')) {
-            handlePaymentMethodChange();
+            handlePaymentMethodChange(event.target); // Pass the target element
         }
     });
 
     // Initialize observer
     const observer = new MutationObserver(function (mutations) {
-        handlePaymentMethodChange();
+        const currentlySelected = document.querySelector('input[name="selected_payment_method"]:checked');
+        if (currentlySelected) {
+            handlePaymentMethodChange(currentlySelected);
+        }
     });
 
     // Start observing
